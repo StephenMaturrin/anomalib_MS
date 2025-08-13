@@ -34,6 +34,8 @@ Note:
 
 import re
 from pathlib import Path
+import sys
+import shutil
 
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
@@ -102,7 +104,11 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
     latest_link_path = root_dir / "latest"
     if latest_link_path.is_symlink() or latest_link_path.exists():
         latest_link_path.unlink()
-    latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
+    if sys.platform.startswith("win"):
+        # On Windows, copy instead of symlink to avoid privilege issues
+        shutil.copytree(new_version_dir, latest_link_path)
+    else:
+        latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
 
     return latest_link_path
 
